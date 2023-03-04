@@ -12,33 +12,16 @@ import (
     "time"
 
     "github.com/cheggaaa/pb/v3"
-    "gopkg.in/yaml.v3"
 )
-
-type Config struct {
-    OutputDir  string   `yaml:"output_dir"`
-    SourceDirs []string `yaml:"source_dirs"`
-}
 
 func main() {
     // Parse command-line arguments
     flag.Parse()
 
     // Load configuration from file
-    var config Config
-    configFile, err := os.Open("config.yaml")
+    config, err := LoadConfig("config.yaml")
     if err != nil {
         log.Fatal(err)
-    }
-    defer configFile.Close()
-    decoder := yaml.NewDecoder(configFile)
-    if err = decoder.Decode(&config); err != nil {
-        log.Fatal(err)
-    }
-
-    // Check that output_dir is specified
-    if config.OutputDir == "" {
-        log.Fatal("Error: output_dir not specified in configuration file")
     }
 
     // Define destination directory
