@@ -1,6 +1,6 @@
 # Build the program
 build:
-	go build -o ./bin/backupbrr
+	go build -o ./bin/backubrr
 
 # Clean up build artifacts
 clean:
