@@ -13,7 +13,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/briandowns/spinner"
 	"github.com/fatih/color"
 )
 
@@ -53,10 +52,6 @@ func main() {
 
 	// Create destination directory if it doesn't exist
 	os.MkdirAll(config.OutputDir, 0755)
-
-	// Create spinner
-	s := spinner.New(spinner.CharSets[43], 100*time.Millisecond)
-	s.Prefix = "Archiving... "
 
 	for {
 		for _, sourceDir := range config.SourceDirs {
@@ -115,9 +110,6 @@ func main() {
 			tarWriter.Close()
 			gzipWriter.Close()
 			destFile.Close()
-
-			// Stop the spinner
-			s.Stop()
 
 			// Print success message
 			color.Green("Backup created successfully! Archive saved to %s\n\n", filepath.Join(config.OutputDir, archiveName))
