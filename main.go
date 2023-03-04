@@ -1,111 +1,109 @@
 package main
 
 import (
-    "archive/tar"
-    "compress/gzip"
-    "flag"
-    "fmt"
-    "io"
-    "log"
-    "os"
-    "path/filepath"
-    "time"
-
-    "github.com/cheggaaa/pb/v3"
+	"archive/tar"
+	"backubrr/cleaner"
+	"backubrr/config"
+	"compress/gzip"
+	"flag"
+	"fmt"
+	"io"
+	"log"
+	"os"
+	"path/filepath"
+	"time"
 )
 
+func printHelp() {
+	fmt.Println(`
+Backubrr
+
+A command-line tool for backing up files and directories.
+
+Usage:
+  backubrr [flags]
+
+Flags:
+  --config string    path to config file (default "config.yaml")
+  -h, --help         show this message`)
+}
+
 func main() {
-    // Parse command-line arguments
-    flag.Parse()
+	// Parse command-line arguments
+	var configFilePath string
+	flag.StringVar(&configFilePath, "config", "config.yaml", "path to config file")
+	flag.Parse()
+	flag.Usage = printHelp
 
-    // Load configuration from file
-    config, err := LoadConfig("config.yaml")
-    if err != nil {
-        log.Fatal(err)
-    }
+	// Load configuration from file
+	config, err := config.LoadConfig(configFilePath)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-    // Define destination directory
-    destDir := config.OutputDir
+	// Create destination directory if it doesn't exist
+	os.MkdirAll(config.OutputDir, 0755)
 
-    // Create destination directory if it doesn't exist
-    os.MkdirAll(destDir, 0755)
+	for _, sourceDir := range config.SourceDirs {
+		// Print source directory being backed up
+		fmt.Printf("Backing up %s...\n", sourceDir)
+		// Define archive name
+		archiveName := fmt.Sprintf("%s_%s.tar.gz", filepath.Base(sourceDir), time.Now().Format("2006-01-02_15-04-05"))
 
-    for _, sourceDir := range config.SourceDirs {
-        // Print source directory being backed up
-        fmt.Printf("Backing up %s...\n", sourceDir)
+		// Create destination file for writing
+		destFile, err := os.Create(filepath.Join(config.OutputDir, archiveName))
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer destFile.Close()
 
-        // Define archive name
-        archiveName := fmt.Sprintf("%s_%s.tar.gz", filepath.Base(sourceDir), time.Now().Format("2006-01-02_15-04-05"))
+		// Create gzip writer
+		gzipWriter := gzip.NewWriter(destFile)
+		defer gzipWriter.Close()
 
-        // Create destination file for writing
-        destFile, err := os.Create(filepath.Join(destDir, archiveName))
-        if err != nil {
-            log.Fatal(err)
-        }
-        defer destFile.Close()
+		// Create tar writer
+		tarWriter := tar.NewWriter(gzipWriter)
+		defer tarWriter.Close()
 
-        // Create gzip writer
-        gzipWriter := gzip.NewWriter(destFile)
-        defer gzipWriter.Close()
+		// Walk through source directory recursively
+		filepath.Walk(sourceDir, func(path string, info os.FileInfo, err error) error {
+			if err != nil || info.IsDir() || filepath.Base(path)[0] == '.' {
+				return err
+			}
 
-        // Create tar writer
-        tarWriter := tar.NewWriter(gzipWriter)
-        defer tarWriter.Close()
+			// Create tar header
+			header, err := tar.FileInfoHeader(info, "")
+			if err != nil {
+				return err
+			}
+			header.Name = path[len(sourceDir)+1:]
 
-        // Count number of files in source directory
-        fileCount := 0
-        filepath.Walk(sourceDir, func(path string, info os.FileInfo, err error) error {
-            if !info.IsDir() && filepath.Base(path)[0] != '.' {
-                fileCount++
-            }
-            return nil
-        })
+			// Write header to tar archive
+			if err = tarWriter.WriteHeader(header); err != nil {
+				return err
+			}
 
-        // Create progress bar
-        bar := pb.Full.Start(fileCount)
-        bar.SetTemplateString(`{{ green "Backup Progress:" }} {{ bar . "[" "=" ">" "-" "]"}} {{ percent . }} {{speed .}} {{etime .}} / {{rtime .}}`)
-        bar.SetWidth(80)
+			// Open source file for reading
+			sourceFile, err := os.Open(path)
+			if err != nil {
+				return err
+			}
+			defer sourceFile.Close()
 
-        // Walk through source directory recursively
-        filepath.Walk(sourceDir, func(path string, info os.FileInfo, err error) error {
-            if err != nil || info.IsDir() || filepath.Base(path)[0] == '.' {
-                return err
-            }
+			// Copy source file contents to tar archive
+			if _, err = io.Copy(tarWriter, sourceFile); err != nil {
+				return err
+			}
 
-            // Create tar header
-            header, err := tar.FileInfoHeader(info, "")
-            if err != nil {
-                return err
-            }
-            header.Name = path[len(sourceDir)+1:]
+			return nil
+		})
 
-            // Write header to tar archive
-            if err = tarWriter.WriteHeader(header); err != nil {
-                return err
-            }
+		// Print success message
+		fmt.Printf("Backup created successfully! Archive saved to %s\n", filepath.Join(config.OutputDir, archiveName))
 
-            // Open source file for reading
-            sourceFile, err := os.Open(path)
-            if err != nil {
-                return err
-            }
-            defer sourceFile.Close()
-
-            // Copy source file contents to tar archive
-            if _, err = io.Copy(tarWriter, sourceFile); err != nil {
-                return err
-            }
-
-            // Increment progress bar
-            bar.Increment()
-
-            return nil
-        })
-
-        // Finish progress bar
-        bar.Finish()
-
-        // Print success message
-        fmt.Printf("Backup created successfully! Archive saved to %s\n", filepath.Join(destDir, archiveName))
-    }
+		// Clean up old backups
+		if err := cleaner.Cleaner(configFilePath); err != nil {
+			log.Fatal("Error cleaning up old backups: ", err)
+		}
+	}
 }
