@@ -27,8 +27,14 @@ func Cleaner(configFilePath string) error {
 		return fmt.Errorf("output_dir does not exist: %s", outputDir)
 	}
 
-	// Walk through backup directory
-	cutoffTime := time.Now().Add(-7 * 24 * time.Hour)
+	// Get retention days from configuration file
+	retentionDays := viper.GetInt("retention_days")
+	if retentionDays == 0 {
+		retentionDays = 7 // default retention period is 7 days
+	}
+
+	// Calculate cutoff time based on retention period
+	cutoffTime := time.Now().Add(-time.Duration(retentionDays) * 24 * time.Hour)
 	deletedBackups := false
 	err := filepath.Walk(outputDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -40,7 +46,7 @@ func Cleaner(configFilePath string) error {
 			return nil
 		}
 
-		// Check if file is older than 7 days
+		// Check if file is older than retention period
 		if info.ModTime().Before(cutoffTime) {
 			if err := os.Remove(path); err != nil {
 				return err
