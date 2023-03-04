@@ -45,16 +45,20 @@ func main() {
 	flag.StringVar(&configFilePath, "config", "config.yaml", "path to config file")
 	flag.Parse()
 
+	// Load configuration from file
+	config, err := config.LoadConfig(configFilePath)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Create destination directory if it doesn't exist
+	os.MkdirAll(config.OutputDir, 0755)
+
+	// Create spinner
+	s := spinner.New(spinner.CharSets[43], 100*time.Millisecond)
+	s.Prefix = "Archiving... "
+
 	for {
-		// Load configuration from file
-		config, err := config.LoadConfig(configFilePath)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		// Create destination directory if it doesn't exist
-		os.MkdirAll(config.OutputDir, 0755)
-
 		for _, sourceDir := range config.SourceDirs {
 			// Print source directory being backed up
 			color.Blue("Backing up %s...\n", sourceDir)
@@ -67,20 +71,12 @@ func main() {
 			if err != nil {
 				log.Fatal(err)
 			}
-			defer destFile.Close()
 
 			// Create gzip writer
 			gzipWriter := gzip.NewWriter(destFile)
-			defer gzipWriter.Close()
 
 			// Create tar writer
 			tarWriter := tar.NewWriter(gzipWriter)
-			defer tarWriter.Close()
-
-			// Create spinner
-			s := spinner.New(spinner.CharSets[43], 100*time.Millisecond)
-			s.Prefix = "Archiving... "
-			s.Start()
 
 			// Walk through source directory recursively
 			filepath.Walk(sourceDir, func(path string, info os.FileInfo, err error) error {
@@ -114,6 +110,11 @@ func main() {
 
 				return nil
 			})
+
+			// Close writers and files
+			tarWriter.Close()
+			gzipWriter.Close()
+			destFile.Close()
 
 			// Stop the spinner
 			s.Stop()

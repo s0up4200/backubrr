@@ -2,11 +2,11 @@ package cleaner
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"time"
 
-	"github.com/fatih/color"
 	"github.com/spf13/viper"
 )
 
@@ -37,6 +37,8 @@ func Cleaner(configFilePath string) error {
 	// Calculate cutoff time based on retention period
 	cutoffTime := time.Now().Add(-time.Duration(retentionDays) * 24 * time.Hour)
 	deletedBackups := false
+
+	// Walk through output directory
 	err := filepath.Walk(outputDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -63,9 +65,9 @@ func Cleaner(configFilePath string) error {
 	}
 
 	if deletedBackups {
-		color.Cyan("Old backups deleted successfully.")
+		log.Printf("Old backups deleted successfully.")
 	} else {
-		fmt.Println("No old backups found. Cleanup not needed.")
+		log.Printf("No old backups found. Cleanup not needed.")
 	}
 
 	return nil

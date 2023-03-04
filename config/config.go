@@ -2,7 +2,7 @@ package config
 
 import (
 	"errors"
-	"io/ioutil"
+	"os"
 
 	"github.com/fatih/color"
 	"gopkg.in/yaml.v2"
@@ -19,7 +19,7 @@ type Config struct {
 // LoadConfig loads the backup configuration from a YAML file.
 func LoadConfig(filePath string) (*Config, error) {
 	// Read config file
-	data, err := ioutil.ReadFile(filePath)
+	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, err
 	}
@@ -30,6 +30,7 @@ func LoadConfig(filePath string) (*Config, error) {
 		return nil, err
 	}
 
+	// Check interval is positive
 	if config.Interval < 0 {
 		return nil, errors.New(color.HiRedString("error: Interval must be a positive number"))
 	}
