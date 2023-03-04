@@ -125,8 +125,6 @@ func main() {
 		// Clean up old backups
 		if err := cleaner.Cleaner(configFilePath); err != nil {
 			log.Fatal("Error cleaning up old backups: ", err)
-		} else {
-			color.Blue("Old backups have been cleaned up successfully.\n")
 		}
 
 		// Sleep until the next backup time, if configured

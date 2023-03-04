@@ -22,14 +22,15 @@ source_dirs:
   - /path/to/source/directory1
   - /path/to/source/directory2
 #interval: 24 #hours
+#retention: 7 #days
 ```
 
 The output_dir key specifies the destination directory where the backup archives will be stored. The source_dirs key is a list of source directories that will be backed up. You can add as many source directories as you need to this list.
 
-To create a backup, simply run the backubrr executable:
+To create a backup, simply run the backubrr executable with or without the `--config` variable:
 
 ```bash
-./backubrr
+./backubrr --config /path/to/config.yaml
 ```
 
 By default, Backubrr runs once and exits. If you want to run it on a schedule, add the interval key and set its value to the number of hours between backups. For example, `interval: 24` will run Backubrr once a day. You can change the interval value to any number of hours.
