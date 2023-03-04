@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/briandowns/spinner"
 	"github.com/fatih/color"
 )
 
@@ -55,6 +56,7 @@ func main() {
 	for _, sourceDir := range config.SourceDirs {
 		// Print source directory being backed up
 		color.Blue("Backing up %s...\n", sourceDir)
+
 		// Define archive name
 		archiveName := fmt.Sprintf("%s_%s.tar.gz", filepath.Base(sourceDir), time.Now().Format("2006-01-02_15-04-05"))
 
@@ -72,6 +74,11 @@ func main() {
 		// Create tar writer
 		tarWriter := tar.NewWriter(gzipWriter)
 		defer tarWriter.Close()
+
+		// Create spinner
+		s := spinner.New(spinner.CharSets[43], 100*time.Millisecond)
+		s.Prefix = "Archiving... "
+		s.Start()
 
 		// Walk through source directory recursively
 		filepath.Walk(sourceDir, func(path string, info os.FileInfo, err error) error {
@@ -105,6 +112,9 @@ func main() {
 
 			return nil
 		})
+
+		// Stop the spinner
+		s.Stop()
 
 		// Print success message
 		color.Green("Backup created successfully! Archive saved to %s\n\n", filepath.Join(config.OutputDir, archiveName))
