@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/fatih/color"
 	"github.com/spf13/viper"
 )
 
@@ -62,7 +63,7 @@ func Cleaner(configFilePath string) error {
 	}
 
 	if deletedBackups {
-		fmt.Println("Old backups deleted successfully.")
+		color.Cyan("Old backups deleted successfully.")
 	} else {
 		fmt.Println("No old backups found. Cleanup not needed.")
 	}

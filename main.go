@@ -12,6 +12,8 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/fatih/color"
 )
 
 func printHelp() {
@@ -52,7 +54,7 @@ func main() {
 
 	for _, sourceDir := range config.SourceDirs {
 		// Print source directory being backed up
-		fmt.Printf("Backing up %s...\n", sourceDir)
+		color.Blue("Backing up %s...\n", sourceDir)
 		// Define archive name
 		archiveName := fmt.Sprintf("%s_%s.tar.gz", filepath.Base(sourceDir), time.Now().Format("2006-01-02_15-04-05"))
 
@@ -105,11 +107,11 @@ func main() {
 		})
 
 		// Print success message
-		fmt.Printf("Backup created successfully! Archive saved to %s\n", filepath.Join(config.OutputDir, archiveName))
+		color.Green("Backup created successfully! Archive saved to %s\n\n", filepath.Join(config.OutputDir, archiveName))
+	}
 
-		// Clean up old backups
-		if err := cleaner.Cleaner(configFilePath); err != nil {
-			log.Fatal("Error cleaning up old backups: ", err)
-		}
+	// Clean up old backups
+	if err := cleaner.Cleaner(configFilePath); err != nil {
+		log.Fatal("Error cleaning up old backups: ", err)
 	}
 }
