@@ -14,13 +14,14 @@ go build
 
 ## Usage
 
-To use Backubrr, you'll need to create a configuration file named config.yaml in the same directory as the backubrr executable. The configuration file should contain the following keys:
+By default, Backubrr looks for a configuration file named config.yaml in the same directory as the backubrr executable. Alternatively, you can specify a custom configuration file using the --config flag. The configuration file should contain the following keys:
 
 ```yaml
 output_dir: /path/to/backup/directory
 source_dirs:
   - /path/to/source/directory1
   - /path/to/source/directory2
+#interval: 24 #hours
 ```
 
 The output_dir key specifies the destination directory where the backup archives will be stored. The source_dirs key is a list of source directories that will be backed up. You can add as many source directories as you need to this list.
@@ -31,4 +32,6 @@ To create a backup, simply run the backubrr executable:
 ./backubrr
 ```
 
-Backubrr will read the config.yaml file and create compressed tar archives of each source directory. The archives will be stored in the destination directory specified in the configuration file.
+By default, Backubrr runs once and exits. If you want to run it on a schedule, add the interval key and set its value to the number of hours between backups. For example, `interval: 24` will run Backubrr once a day. You can change the interval value to any number of hours.
+
+Backubrr will read the configuration file and create compressed tar archives of each source directory. The archives will be stored in the destination directory specified in the configuration file. If a backup already exists with the same name, Backubrr will overwrite it. If old backups need to be cleaned up, Backubrr will remove them according to the retention_days key in the configuration file.

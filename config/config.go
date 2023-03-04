@@ -1,8 +1,10 @@
 package config
 
 import (
+	"errors"
 	"io/ioutil"
 
+	"github.com/fatih/color"
 	"gopkg.in/yaml.v2"
 )
 
@@ -26,6 +28,10 @@ func LoadConfig(filePath string) (*Config, error) {
 	config := &Config{}
 	if err := yaml.Unmarshal(data, config); err != nil {
 		return nil, err
+	}
+
+	if config.Interval < 0 {
+		return nil, errors.New(color.HiRedString("error: Interval must be a positive number"))
 	}
 
 	return config, nil
