@@ -11,6 +11,7 @@ type Config struct {
 	SourceDirs    []string `yaml:"source_dirs"`
 	OutputDir     string   `yaml:"output_dir"`
 	RetentionDays int      `yaml:"retention_days"`
+	Interval      int      `yaml:"interval"`
 }
 
 // LoadConfig loads the backup configuration from a YAML file.
