@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/bwmarrin/discordgo"
 	"github.com/fatih/color"
 )
 
@@ -35,6 +36,22 @@ Configuration options:
   retention_days     The number of days to retain backup files.
   interval           Run every X hours.
   `)
+}
+
+func sendToDiscordWebhook(webhookURL string, message string) (*discordgo.Message, error) {
+	// Create a new Discord session using the webhook URL
+	discordSession, err := discordgo.New("webhookURL")
+	if err != nil {
+		return nil, err
+	}
+
+	// Create a new message object with the message content
+	msg := discordgo.WebhookParams{
+		Content: message,
+	}
+
+	// Send the message to the webhook URL
+	return discordSession.WebhookExecute(webhookURL, "", true, &msg, nil)
 }
 
 func main() {
@@ -113,6 +130,14 @@ func main() {
 
 			// Print success message
 			color.Green("Backup created successfully! Archive saved to %s\n\n", filepath.Join(config.OutputDir, archiveName))
+
+			// Send success message to Discord webhook
+			message := fmt.Sprintf("Backup created successfully! Archive saved to %s\n\n", filepath.Join(config.OutputDir, archiveName))
+			_, err = sendToDiscordWebhook(config.DiscordWebhookURL, message)
+			if err != nil {
+				log.Fatal(err)
+			}
+
 		}
 
 		// Clean up old backups

@@ -10,10 +10,11 @@ import (
 
 // Config stores the configuration for the backup program.
 type Config struct {
-	SourceDirs    []string `yaml:"source_dirs"`
-	OutputDir     string   `yaml:"output_dir"`
-	RetentionDays int      `yaml:"retention_days"`
-	Interval      int      `yaml:"interval"`
+	SourceDirs        []string `yaml:"source_dirs"`
+	OutputDir         string   `yaml:"output_dir"`
+	RetentionDays     int      `yaml:"retention_days"`
+	Interval          int      `yaml:"interval"`
+	DiscordWebhookURL string   `yaml:"discord"`
 }
 
 // LoadConfig loads the backup configuration from a YAML file.
