@@ -49,6 +49,8 @@ func main() {
 			backupMessages = append(backupMessages, backupMessage)
 		}
 
+		// fmt.Printf("Checking if there are older backups set for deletion...\n")
+
 		// Send backup messages to Discord
 		if config.DiscordWebhookURL != "" {
 			if err := notifications.SendToDiscordWebhook(config.DiscordWebhookURL, backupMessages); err != nil {

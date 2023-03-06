@@ -35,7 +35,7 @@ func CreateBackup(config *config.Config, sourceDir string) error {
 	tarWriter := tar.NewWriter(gzipWriter)
 
 	// Create a new spinner with rotating character set
-	spin := spinner.New(spinner.CharSets[9], 100*time.Millisecond)
+	spin := spinner.New(spinner.CharSets[50], 100*time.Millisecond)
 
 	// Start the spinner
 	spin.Start()
