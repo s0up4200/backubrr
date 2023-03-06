@@ -35,7 +35,7 @@ func init() {
 }
 
 func PrintVersion() {
-	fmt.Printf("Backubrr %s %s %s\n", version, commit[:7], date)
+	fmt.Printf("backubrr v%s %s %s\n", version, commit[:7], date)
 }
 
 func main() {
