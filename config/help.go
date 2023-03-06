@@ -3,7 +3,6 @@ package config
 import (
 	"fmt"
 	"os"
-	"strings"
 )
 
 var (
@@ -25,10 +24,6 @@ func init() {
 }
 
 func PrintHelp() {
-	version = strings.TrimSpace(version)
-	commit = strings.TrimSpace(commit)
-	date = strings.TrimSpace(date)
-
 	fmt.Printf(`
 A command-line tool for backing up files and directories.
 
@@ -38,6 +33,7 @@ backubrr [flags]
 Flags:
 --config string    path to config file (default "config.yaml")        Specifies the path to the configuration file.
 -h, --help         show this message                                  Displays this help message.
+version      show version information                           Displays version, commit, and date information.
 
 Configuration options:
   source_dirs        A list of directories to back up.
@@ -47,5 +43,8 @@ Configuration options:
   discord            Send notifications to Discord after a backup run.
 
 `)
-	fmt.Printf("Backubrr %s %s %s\n\n", version, commit[:7], date)
+}
+
+func PrintVersion() {
+	fmt.Printf("Backubrr %s %s %s\n", version, commit[:7], date)
 }

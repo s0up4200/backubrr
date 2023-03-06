@@ -41,6 +41,11 @@ func main() {
 	flag.StringVar(&configFilePath, "config", "config.yaml", "path to config file")
 	flag.Parse()
 
+	if len(os.Args) == 2 && (os.Args[1] == "version" || os.Args[1] == "-v" || os.Args[1] == "--version") {
+		config.PrintVersion()
+		return
+	}
+
 	// Load configuration from file
 	config, err := config.LoadConfig(configFilePath)
 	if err != nil {
@@ -49,8 +54,6 @@ func main() {
 
 	// Create destination directory if it doesn't exist
 	os.MkdirAll(config.OutputDir, 0755)
-
-	fmt.Printf("Backubrr %s %s %s\n\n", version, commit[:7], date)
 
 	for {
 		var backupMessages []string
