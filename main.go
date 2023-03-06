@@ -84,7 +84,7 @@ func main() {
 				duration := time.Duration(config.Interval) * time.Hour
 				nextBackupTime = time.Now().Add(duration)
 			}
-			color.Cyan("Next backup will run at %s\n", nextBackupTime.Format("2006-01-02 15:04:05"))
+			color.Cyan("\nNext backup will run at %s\n", nextBackupTime.Format("2006-01-02 15:04:05"))
 			time.Sleep(time.Until(nextBackupTime))
 		} else {
 			break
