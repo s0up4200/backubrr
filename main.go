@@ -39,11 +39,12 @@ func main() {
 		for _, sourceDir := range config.SourceDirs {
 			err := backup.CreateBackup(config, sourceDir)
 			if err != nil {
-				log.Fatal(err)
+				fmt.Printf("Error creating backup of %s: %s\n", sourceDir, err)
+				continue
 			}
 
 			// Replace home directory path with ~ in backup message
-			backupMessage := fmt.Sprintf("Backup of **`%s`** created successfully! Archive saved to **`%s`**\n", filepath.Base(sourceDir), filepath.Join(config.OutputDir, fmt.Sprintf("%s_%s.tar.gz", filepath.Base(sourceDir), time.Now().Format("2006-01-02_15-04-05"))))
+			backupMessage := "Backup of **`" + filepath.Base(sourceDir) + "`** created successfully! Archive saved to **`" + filepath.Join(config.OutputDir, filepath.Base(sourceDir)+"_"+time.Now().Format("2006-01-02_15-04-05")+".tar.gz") + "`**\n"
 			backupMessage = strings.Replace(backupMessage, os.Getenv("HOME"), "~", -1)
 			backupMessages = append(backupMessages, backupMessage)
 		}
@@ -64,7 +65,7 @@ func main() {
 
 		// Send next backup message to Discord
 		if config.DiscordWebhookURL != "" && !nextBackupTime.IsZero() {
-			nextBackupMessage := fmt.Sprintf("Next backup will run at **`%s`**", nextBackupTime.Format("2006-01-02 15:04:05"))
+			nextBackupMessage := "Next backup will run at **`" + nextBackupTime.Format("2006-01-02 15:04:05") + "`**"
 			if err := notifications.SendToDiscordWebhook(config.DiscordWebhookURL, []string{nextBackupMessage}); err != nil {
 				fmt.Println("Error sending message to Discord:", err)
 			}
@@ -72,13 +73,15 @@ func main() {
 
 		// Clean up old backups
 		if err := cleaner.Cleaner(configFilePath); err != nil {
-			log.Fatal("Error cleaning up old backups: ", err)
+			fmt.Println("Error cleaning up old backups:", err)
 		}
 
 		// Sleep until the next backup time, if configured
 		if config.Interval > 0 {
-			duration := time.Duration(config.Interval) * time.Hour
-			nextBackupTime := time.Now().Add(duration)
+			if nextBackupTime.IsZero() {
+				duration := time.Duration(config.Interval) * time.Hour
+				nextBackupTime = time.Now().Add(duration)
+			}
 			color.Cyan("Next backup will run at %s\n", nextBackupTime.Format("2006-01-02 15:04:05"))
 			time.Sleep(time.Until(nextBackupTime))
 		} else {
