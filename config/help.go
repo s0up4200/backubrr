@@ -14,7 +14,7 @@ backubrr [flags]
 Flags:
 --config string    path to config file (default "config.yaml")        Specifies the path to the configuration file.
 -h, --help         show this message                                  Displays this help message.
-version      show version information                           Displays version, commit, and date information.
+version            show version information                           Displays version, commit, and date information.
 
 Configuration options:
   source_dirs        A list of directories to back up.
