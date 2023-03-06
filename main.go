@@ -35,6 +35,7 @@ Configuration options:
   output_dir         The directory where backup files are saved.
   retention_days     The number of days to retain backup files.
   interval           Run every X hours.
+  discord            Send notifications to Discord after a backup run.
   `)
 }
 
