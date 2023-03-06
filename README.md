@@ -18,6 +18,15 @@ Alternatively, you can download the latest binary from the [releases page](https
 
 ## Usage
 
+```bash
+backubrr [flags]
+
+Flags:
+--config string    path to config file (default "config.yaml")        Specifies the path to the configuration file. Optional.
+-h, --help         show this message                                  Displays this help message.
+version            show version information                           Displays version, commit, and date information.
+```
+
 By default, Backubrr looks for a configuration file named config.yaml in the same directory as the backubrr executable. Alternatively, you can specify a custom configuration file using the --config flag. The configuration file should contain the following keys:
 
 ```yaml
