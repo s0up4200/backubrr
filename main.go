@@ -1,52 +1,27 @@
 package main
 
 import (
-	"archive/tar"
+	"backubrr/backup"
 	"backubrr/cleaner"
 	"backubrr/config"
 	"backubrr/notifications"
-	"compress/gzip"
 	"flag"
 	"fmt"
-	"io"
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/fatih/color"
 )
 
-func printHelp() {
-	fmt.Println(`
-Backubrr
-
-A command-line tool for backing up files and directories.
-
-Usage:
-  backubrr [flags]
-
-Flags:
-  --config string    path to config file (default "config.yaml")	Specifies the path to the configuration file.
-  -h, --help         show this message					Displays this help message.
-
-Configuration options:
-  source_dirs        A list of directories to back up.
-  output_dir         The directory where backup files are saved.
-  retention_days     The number of days to retain backup files.
-  interval           Run every X hours.
-  discord            Send notifications to Discord after a backup run.
-  `)
-}
-
 func main() {
 	// Parse command-line arguments
-	flag.Usage = printHelp
+	flag.Usage = config.PrintHelp
 	var configFilePath string
 	flag.StringVar(&configFilePath, "config", "config.yaml", "path to config file")
 	flag.Parse()
-
-	var backupMessage string
 
 	// Load configuration from file
 	config, err := config.LoadConfig(configFilePath)
@@ -58,81 +33,40 @@ func main() {
 	os.MkdirAll(config.OutputDir, 0755)
 
 	for {
+		var backupMessages []string
+
+		// Create backup for each source directory
 		for _, sourceDir := range config.SourceDirs {
-			// Print source directory being backed up
-			color.Blue("Backing up %s...\n", sourceDir)
-
-			// Define archive name
-			archiveName := fmt.Sprintf("%s_%s.tar.gz", filepath.Base(sourceDir), time.Now().Format("2006-01-02_15-04-05"))
-
-			// Create destination file for writing
-			destFile, err := os.Create(filepath.Join(config.OutputDir, archiveName))
+			err := backup.CreateBackup(config, sourceDir)
 			if err != nil {
 				log.Fatal(err)
 			}
 
-			// Create gzip writer
-			gzipWriter := gzip.NewWriter(destFile)
+			// Replace home directory path with ~ in backup message
+			backupMessage := fmt.Sprintf("Backup of **`%s`** created successfully! Archive saved to **`%s`**\n", filepath.Base(sourceDir), filepath.Join(config.OutputDir, fmt.Sprintf("%s_%s.tar.gz", filepath.Base(sourceDir), time.Now().Format("2006-01-02_15-04-05"))))
+			backupMessage = strings.Replace(backupMessage, os.Getenv("HOME"), "~", -1)
+			backupMessages = append(backupMessages, backupMessage)
+		}
 
-			// Create tar writer
-			tarWriter := tar.NewWriter(gzipWriter)
-
-			// Walk through source directory recursively
-			filepath.Walk(sourceDir, func(path string, info os.FileInfo, err error) error {
-				if err != nil || info.IsDir() || filepath.Base(path)[0] == '.' {
-					return err
-				}
-
-				// Create tar header
-				header, err := tar.FileInfoHeader(info, "")
-				if err != nil {
-					return err
-				}
-				header.Name = path[len(sourceDir)+1:]
-
-				// Write header to tar archive
-				if err = tarWriter.WriteHeader(header); err != nil {
-					return err
-				}
-
-				// Open source file for reading
-				sourceFile, err := os.Open(path)
-				if err != nil {
-					return err
-				}
-				defer sourceFile.Close()
-
-				// Copy source file contents to tar archive
-				if _, err = io.Copy(tarWriter, sourceFile); err != nil {
-					return err
-				}
-
-				return nil
-			})
-
-			// Close writers and files
-			tarWriter.Close()
-			gzipWriter.Close()
-			destFile.Close()
-
-			// Print success message
-			message := fmt.Sprintf("Backup created successfully! Archive saved to %s\n\n", filepath.Join(config.OutputDir, archiveName))
-			color.Green(message)
-
-			// Append success message to backup message variable
-			backupMessage += fmt.Sprintf("Backup of **`%s`** created successfully! Archive saved to **`%s`**\n", filepath.Base(sourceDir), filepath.Join(config.OutputDir, archiveName))
-
-			if err != nil {
-				log.Fatal(err)
+		// Send backup messages to Discord
+		if config.DiscordWebhookURL != "" {
+			if err := notifications.SendToDiscordWebhook(config.DiscordWebhookURL, backupMessages); err != nil {
+				fmt.Println("Error sending message to Discord:", err)
 			}
 		}
 
-		// Send backup message to Discord webhook
-		if config.DiscordWebhookURL != "" {
-			if err := notifications.SendToDiscordWebhook(config.DiscordWebhookURL, backupMessage); err != nil {
+		// Calculate next backup time
+		var nextBackupTime time.Time
+		if config.Interval > 0 {
+			duration := time.Duration(config.Interval) * time.Hour
+			nextBackupTime = time.Now().Add(duration)
+		}
+
+		// Send next backup message to Discord
+		if config.DiscordWebhookURL != "" && !nextBackupTime.IsZero() {
+			nextBackupMessage := fmt.Sprintf("Next backup will run at **`%s`**", nextBackupTime.Format("2006-01-02 15:04:05"))
+			if err := notifications.SendToDiscordWebhook(config.DiscordWebhookURL, []string{nextBackupMessage}); err != nil {
 				fmt.Println("Error sending message to Discord:", err)
-			} else {
-				fmt.Println("Message sent to Discord successfully!")
 			}
 		}
 
@@ -146,9 +80,10 @@ func main() {
 			duration := time.Duration(config.Interval) * time.Hour
 			nextBackupTime := time.Now().Add(duration)
 			color.Cyan("Next backup will run at %s\n", nextBackupTime.Format("2006-01-02 15:04:05"))
-			time.Sleep(duration)
+			time.Sleep(time.Until(nextBackupTime))
 		} else {
 			break
 		}
+
 	}
 }
