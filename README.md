@@ -24,7 +24,7 @@ source_dirs:
    - /path/to/source/directory1
    - /path/to/source/directory2
 #interval: 24 #hours
-#retention_days: 7 #days
+#retention_days: 7
 #discord: https://discord.com/api/webhooks/XXXXXXXXX/XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
 ```
