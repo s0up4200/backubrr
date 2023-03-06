@@ -16,6 +16,24 @@ import (
 	"github.com/fatih/color"
 )
 
+var (
+	version string = "unknown"
+	commit  string = "unknown"
+	date    string = "unknown"
+)
+
+func init() {
+	if v := os.Getenv("BACKUBRR_VERSION"); v != "" {
+		version = v
+	}
+	if c := os.Getenv("BACKUBRR_COMMIT"); c != "" {
+		commit = c
+	}
+	if d := os.Getenv("BACKUBRR_DATE"); d != "" {
+		date = d
+	}
+}
+
 func main() {
 	// Parse command-line arguments
 	flag.Usage = config.PrintHelp
@@ -31,6 +49,8 @@ func main() {
 
 	// Create destination directory if it doesn't exist
 	os.MkdirAll(config.OutputDir, 0755)
+
+	fmt.Printf("Backubrr %s %s %s\n\n", version, commit, date)
 
 	for {
 		var backupMessages []string

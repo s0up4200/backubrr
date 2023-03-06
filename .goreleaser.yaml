@@ -9,6 +9,9 @@ before:
 builds:
   - env:
       - CGO_ENABLED=0
+      - VERSION={{.Version}}
+      - COMMIT={{.Commit}}
+      - DATE={{.Date}}
     goos:
       - linux
       - windows
