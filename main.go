@@ -45,6 +45,8 @@ func main() {
 	flag.StringVar(&configFilePath, "config", "config.yaml", "path to config file")
 	flag.Parse()
 
+	var backupMessage string
+
 	// Load configuration from file
 	config, err := config.LoadConfig(configFilePath)
 	if err != nil {
@@ -116,21 +118,21 @@ func main() {
 			message := fmt.Sprintf("Backup created successfully! Archive saved to %s\n\n", filepath.Join(config.OutputDir, archiveName))
 			color.Green(message)
 
-			// Send success message to Discord webhook
-			if config.DiscordWebhookURL != "" {
-				message := fmt.Sprintf("Backup of **`%s`** created successfully! Archive saved to **`%s`**\n\n", filepath.Base(sourceDir), filepath.Join(config.OutputDir, archiveName))
-
-				if err := notifications.SendToDiscordWebhook(config.DiscordWebhookURL, message); err != nil {
-					fmt.Println("Error sending message to Discord:", err)
-				} else {
-					fmt.Println("Message sent to Discord successfully!")
-				}
-			}
+			// Append success message to backup message variable
+			backupMessage += fmt.Sprintf("Backup of **`%s`** created successfully! Archive saved to **`%s`**\n", filepath.Base(sourceDir), filepath.Join(config.OutputDir, archiveName))
 
 			if err != nil {
 				log.Fatal(err)
 			}
+		}
 
+		// Send backup message to Discord webhook
+		if config.DiscordWebhookURL != "" {
+			if err := notifications.SendToDiscordWebhook(config.DiscordWebhookURL, backupMessage); err != nil {
+				fmt.Println("Error sending message to Discord:", err)
+			} else {
+				fmt.Println("Message sent to Discord successfully!")
+			}
 		}
 
 		// Clean up old backups
