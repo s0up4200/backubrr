@@ -118,12 +118,9 @@ func main() {
 
 			// Send success message to Discord webhook
 			if config.DiscordWebhookURL != "" {
-				webhookURL := config.DiscordWebhookURL
-				backupDir := filepath.Base(sourceDir)
-				message := fmt.Sprintf("Backup of %s created successfully! Archive saved to %s\n\n", backupDir, filepath.Join(config.OutputDir, archiveName))
+				message := fmt.Sprintf("Backup of **`%s`** created successfully! Archive saved to **`%s`**\n\n", filepath.Base(sourceDir), filepath.Join(config.OutputDir, archiveName))
 
-				err = notifications.SendToDiscordWebhook(webhookURL, message)
-				if err != nil {
+				if err := notifications.SendToDiscordWebhook(config.DiscordWebhookURL, message); err != nil {
 					fmt.Println("Error sending message to Discord:", err)
 				} else {
 					fmt.Println("Message sent to Discord successfully!")
