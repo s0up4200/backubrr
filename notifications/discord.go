@@ -7,31 +7,30 @@ import (
 	"net/http"
 )
 
-func SendToDiscordWebhook(webhookURL string, message string) error {
-	type discordMessage struct {
-		Content string `json:"content"`
-	}
+type discordMessage struct {
+	Content string `json:"content"`
+}
 
+func SendToDiscordWebhook(webhookURL string, message string) error {
 	payload, err := json.Marshal(discordMessage{Content: message})
 	if err != nil {
 		return err
 	}
 
-	req, err := http.NewRequest("POST", webhookURL, bytes.NewBuffer(payload))
+	req, err := http.NewRequest(http.MethodPost, webhookURL, bytes.NewBuffer(payload))
 	if err != nil {
 		return err
 	}
 
 	req.Header.Set("Content-Type", "application/json")
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
 		return fmt.Errorf("unexpected response status code %d", resp.StatusCode)
 	}
 
