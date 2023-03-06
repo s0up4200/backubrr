@@ -7,9 +7,9 @@ import (
 )
 
 var (
-	version string = "dev"
-	commit  string = ""
-	date    string = ""
+	version string = "unknown"
+	commit  string = "unknown"
+	date    string = "unknown"
 )
 
 func init() {
@@ -46,6 +46,6 @@ Configuration options:
   interval           Run every X hours.
   discord            Send notifications to Discord after a backup run.
 
-Backubrr version: %s %s %s
-`, version, commit, date)
+`)
+	fmt.Printf("Backubrr %s %s %s\n\n", version, commit[:7], date)
 }

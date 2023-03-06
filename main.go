@@ -50,7 +50,7 @@ func main() {
 	// Create destination directory if it doesn't exist
 	os.MkdirAll(config.OutputDir, 0755)
 
-	fmt.Printf("Backubrr %s %s %s\n\n", version, commit, date)
+	fmt.Printf("Backubrr %s %s %s\n\n", version, commit[:7], date)
 
 	for {
 		var backupMessages []string
