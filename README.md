@@ -1,8 +1,8 @@
-# Backubrr
+# backubrr
 
 ![backubrr logo(2)](https://user-images.githubusercontent.com/18177310/223215138-5915cbb4-2c05-4084-afa3-939a5147db5f.png)
 
-Backubrr is a command-line tool for backing up directories specified in a configuration file. It creates compressed tar archives of the specified directories and stores them in a destination directory.
+backubrr is a command-line tool for backing up directories specified in a configuration file. It creates compressed tar archives of the specified directories and stores them in a destination directory.
 
 ## Installation
 
