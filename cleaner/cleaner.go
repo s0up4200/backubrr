@@ -64,6 +64,8 @@ func Cleaner(configFilePath string) error {
 		return err
 	}
 
+	log.SetFlags(0)
+
 	if deletedBackups {
 		log.Printf("Old backups deleted successfully.")
 	} else {
