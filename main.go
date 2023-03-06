@@ -34,6 +34,10 @@ func init() {
 	}
 }
 
+func PrintVersion() {
+	fmt.Printf("Backubrr %s %s %s\n", version, commit[:7], date)
+}
+
 func main() {
 	// Parse command-line arguments
 	flag.Usage = config.PrintHelp
@@ -42,7 +46,7 @@ func main() {
 	flag.Parse()
 
 	if len(os.Args) == 2 && (os.Args[1] == "version" || os.Args[1] == "-v" || os.Args[1] == "--version") {
-		config.PrintVersion()
+		PrintVersion()
 		return
 	}
 

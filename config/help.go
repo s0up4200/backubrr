@@ -2,26 +2,7 @@ package config
 
 import (
 	"fmt"
-	"os"
 )
-
-var (
-	version string = "unknown"
-	commit  string = "unknown"
-	date    string = "unknown"
-)
-
-func init() {
-	if v := os.Getenv("BACKUBRR_VERSION"); v != "" {
-		version = v
-	}
-	if c := os.Getenv("BACKUBRR_COMMIT"); c != "" {
-		commit = c
-	}
-	if d := os.Getenv("BACKUBRR_DATE"); d != "" {
-		date = d
-	}
-}
 
 func PrintHelp() {
 	fmt.Printf(`
@@ -43,8 +24,4 @@ Configuration options:
   discord            Send notifications to Discord after a backup run.
 
 `)
-}
-
-func PrintVersion() {
-	fmt.Printf("Backubrr %s %s %s\n", version, commit[:7], date)
 }
