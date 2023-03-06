@@ -11,6 +11,7 @@ import (
 
 	"backubrr/config"
 
+	"github.com/briandowns/spinner"
 	"github.com/fatih/color"
 )
 
@@ -32,6 +33,12 @@ func CreateBackup(config *config.Config, sourceDir string) error {
 
 	// Create tar writer
 	tarWriter := tar.NewWriter(gzipWriter)
+
+	// Create a new spinner with rotating character set
+	spin := spinner.New(spinner.CharSets[9], 100*time.Millisecond)
+
+	// Start the spinner
+	spin.Start()
 
 	// Walk through source directory recursively
 	filepath.Walk(sourceDir, func(path string, info os.FileInfo, err error) error {
@@ -65,6 +72,9 @@ func CreateBackup(config *config.Config, sourceDir string) error {
 
 		return nil
 	})
+
+	// Stop the spinner
+	spin.Stop()
 
 	// Close writers and files
 	tarWriter.Close()
