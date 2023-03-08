@@ -59,9 +59,13 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// Check if encryption key is set in config
+	// Check if encryption key is set correctly
 	if config.EncryptionKey != "" && passphrase != "" {
 		errorMessage := "Encryption key is already set in config. Please remove the --passphrase argument or unset the encryption key in the config file."
+		color.HiRed(errorMessage)
+		os.Exit(1)
+	} else if config.EncryptionKey == "" && passphrase == "" {
+		errorMessage := "Encryption key is not set. Please provide an encryption key passphrase with the --passphrase argument or set the encryption key in the config file."
 		color.HiRed(errorMessage)
 		os.Exit(1)
 	}
@@ -75,18 +79,22 @@ func main() {
 	for {
 		// Create backup for each source directory
 		for _, sourceDir := range config.SourceDirs {
+			var archiveName string
+			if config.EncryptionKey != "" || passphrase != "" {
+				archiveName = fmt.Sprintf("%s_%s.tar.gz.enc", filepath.Base(sourceDir), time.Now().Format("2006-01-02_15-04-05"))
+			} else {
+				archiveName = fmt.Sprintf("%s_%s.tar.gz", filepath.Base(sourceDir), time.Now().Format("2006-01-02_15-04-05"))
+			}
 			err := backup.CreateBackup(config, sourceDir, passphrase)
 			if err != nil {
 				log.Printf("Error creating backup of %s: %s\n", sourceDir, err)
 				continue
 			}
 
-			archiveName := fmt.Sprintf("%s_%s.tar.gz", filepath.Base(sourceDir), time.Now().Format("2006-01-02_15-04-05"))
 			backupDir := filepath.Join(config.OutputDir, filepath.Base(sourceDir))
 			var backupMessage string
-			if config.EncryptionKey != "" {
-				encryptedArchiveName := archiveName + ".enc"
-				backupMessage = fmt.Sprintf("Backup of **`%s`** created successfully! Encrypted archive saved to **`%s`**\n", sourceDir, filepath.Join(backupDir, encryptedArchiveName))
+			if config.EncryptionKey != "" || passphrase != "" {
+				backupMessage = fmt.Sprintf("Backup of **`%s`** created successfully! Encrypted archive saved to **`%s`**\n", sourceDir, filepath.Join(backupDir, archiveName))
 			} else {
 				backupMessage = fmt.Sprintf("Backup of **`%s`** created successfully! Archive saved to **`%s`**\n", sourceDir, filepath.Join(backupDir, archiveName))
 			}
