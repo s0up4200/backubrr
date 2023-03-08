@@ -12,6 +12,7 @@ import (
 type Config struct {
 	SourceDirs        []string `yaml:"source_dirs"`
 	OutputDir         string   `yaml:"output_dir"`
+	EncryptionKey     string   `yaml:"encryption_key"`
 	RetentionDays     int      `yaml:"retention_days"`
 	Interval          int      `yaml:"interval"`
 	DiscordWebhookURL string   `yaml:"discord"`
