@@ -83,7 +83,9 @@ func main() {
 			}
 
 			// Replace home directory path with ~ in backup message
-			backupMessage := "Backup of **`" + filepath.Base(sourceDir) + "`** created successfully! Archive saved to **`" + filepath.Join(config.OutputDir, filepath.Base(sourceDir)+"_"+time.Now().Format("2006-01-02_15-04-05")+".tar.gz") + "`**\n"
+			archiveName := fmt.Sprintf("%s_%s.tar.gz", filepath.Base(sourceDir), time.Now().Format("2006-01-02_15-04-05"))
+			backupDir := filepath.Join(config.OutputDir, filepath.Base(sourceDir))
+			backupMessage := fmt.Sprintf("Backup of **`%s`** created successfully! Archive saved to **`%s`**\n", sourceDir, filepath.Join(backupDir, archiveName))
 			backupMessage = strings.Replace(backupMessage, os.Getenv("HOME"), "~", -1)
 			backupMessages = append(backupMessages, backupMessage)
 		}

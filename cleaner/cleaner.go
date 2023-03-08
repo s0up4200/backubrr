@@ -2,6 +2,7 @@ package cleaner
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -38,7 +39,7 @@ func Cleaner(configFilePath string) error {
 	cutoffTime := time.Now().Add(-time.Duration(retentionDays) * 24 * time.Hour)
 	deletedBackups := false
 
-	// Walk through output directory
+	// Walk through output directory and subdirectories
 	err := filepath.Walk(outputDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -64,6 +65,28 @@ func Cleaner(configFilePath string) error {
 		return err
 	}
 
+	// Walk through output directory and subdirectories again to delete empty directories
+	err = filepath.Walk(outputDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		// Only consider directories that are empty
+		if !info.IsDir() || !isEmptyDir(path) {
+			return nil
+		}
+
+		if err := os.Remove(path); err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return err
+	}
+
 	log.SetFlags(0)
 
 	if deletedBackups {
@@ -73,4 +96,25 @@ func Cleaner(configFilePath string) error {
 	}
 
 	return nil
+}
+
+// Returns true if the directory is empty (contains no files or subdirectories)
+func isEmptyDir(path string) bool {
+	dir, err := os.Open(path)
+	if err != nil {
+		return false
+	}
+	defer dir.Close()
+
+	_, err = dir.Readdir(1)
+	if err == nil {
+		// Directory is not empty
+		return false
+	}
+	if err == io.EOF {
+		// Directory is empty
+		return true
+	}
+	// Error occurred while reading directory
+	return false
 }
