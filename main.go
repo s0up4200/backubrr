@@ -57,7 +57,10 @@ func main() {
 	}
 
 	// Create destination directory if it doesn't exist
-	os.MkdirAll(config.OutputDir, 0755)
+	err = os.MkdirAll(config.OutputDir, 0755)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	for {
 		var backupMessages []string
@@ -66,7 +69,7 @@ func main() {
 		for _, sourceDir := range config.SourceDirs {
 			err := backup.CreateBackup(config, sourceDir)
 			if err != nil {
-				fmt.Printf("Error creating backup of %s: %s\n", sourceDir, err)
+				log.Printf("Error creating backup of %s: %s\n", sourceDir, err)
 				continue
 			}
 
@@ -76,12 +79,15 @@ func main() {
 			backupMessages = append(backupMessages, backupMessage)
 		}
 
-		// fmt.Printf("Checking if there are older backups set for deletion...\n")
+		// Clean up old backups
+		if err := cleaner.Cleaner(configFilePath); err != nil {
+			log.Println("Error cleaning up old backups:", err)
+		}
 
 		// Send backup messages to Discord
 		if config.DiscordWebhookURL != "" {
 			if err := notifications.SendToDiscordWebhook(config.DiscordWebhookURL, backupMessages); err != nil {
-				fmt.Println("Error sending message to Discord:", err)
+				log.Println("Error sending message to Discord:", err)
 			}
 		}
 
@@ -96,13 +102,8 @@ func main() {
 		if config.DiscordWebhookURL != "" && !nextBackupTime.IsZero() {
 			nextBackupMessage := "Next backup will run at **`" + nextBackupTime.Format("2006-01-02 15:04:05") + "`**"
 			if err := notifications.SendToDiscordWebhook(config.DiscordWebhookURL, []string{nextBackupMessage}); err != nil {
-				fmt.Println("Error sending message to Discord:", err)
+				log.Println("Error sending message to Discord:", err)
 			}
-		}
-
-		// Clean up old backups
-		if err := cleaner.Cleaner(configFilePath); err != nil {
-			fmt.Println("Error cleaning up old backups:", err)
 		}
 
 		// Sleep until the next backup time, if configured
