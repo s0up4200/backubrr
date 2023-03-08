@@ -59,9 +59,9 @@ func main() {
 	// Create destination directory if it doesn't exist
 	os.MkdirAll(config.OutputDir, 0755)
 
-	for {
-		var backupMessages []string
+	var backupMessages []string
 
+	for {
 		// Create backup for each source directory
 		for _, sourceDir := range config.SourceDirs {
 			err := backup.CreateBackup(config, sourceDir)
@@ -71,18 +71,9 @@ func main() {
 			}
 
 			// Replace home directory path with ~ in backup message
-			backupMessage := "Backup of **`" + filepath.Base(sourceDir) + "`** created successfully! Archive saved to **`" + filepath.Join(config.OutputDir, filepath.Base(sourceDir)+"_"+time.Now().Format("2006-01-02_15-04-05")+".tar.gz") + "`**\n"
+			backupMessage := "Backup of " + filepath.Base(sourceDir) + " created successfully! Archive saved to " + filepath.Join(config.OutputDir, filepath.Base(sourceDir)+"_"+time.Now().Format("2006-01-02_15-04-05")+".tar.gz") + "\n"
 			backupMessage = strings.Replace(backupMessage, os.Getenv("HOME"), "~", -1)
 			backupMessages = append(backupMessages, backupMessage)
-		}
-
-		// fmt.Printf("Checking if there are older backups set for deletion...\n")
-
-		// Send backup messages to Discord
-		if config.DiscordWebhookURL != "" {
-			if err := notifications.SendToDiscordWebhook(config.DiscordWebhookURL, backupMessages); err != nil {
-				fmt.Println("Error sending message to Discord:", err)
-			}
 		}
 
 		// Calculate next backup time
@@ -92,11 +83,23 @@ func main() {
 			nextBackupTime = time.Now().Add(duration)
 		}
 
-		// Send next backup message to Discord
-		if config.DiscordWebhookURL != "" && !nextBackupTime.IsZero() {
-			nextBackupMessage := "Next backup will run at **`" + nextBackupTime.Format("2006-01-02 15:04:05") + "`**"
-			if err := notifications.SendToDiscordWebhook(config.DiscordWebhookURL, []string{nextBackupMessage}); err != nil {
-				fmt.Println("Error sending message to Discord:", err)
+		if config.DiscordWebhookURL != "" {
+			var messages []string
+
+			if len(backupMessages) > 0 {
+				combinedBackupMessage := strings.Join(backupMessages, "")
+				messages = append(messages, combinedBackupMessage)
+			}
+
+			if !nextBackupTime.IsZero() {
+				nextBackupMessage := "Next backup will run at **`" + nextBackupTime.Format("2006-01-02 15:04:05") + "`**"
+				messages = append(messages, nextBackupMessage)
+			}
+
+			if len(messages) > 0 {
+				if err := notifications.SendToDiscordWebhook(config.DiscordWebhookURL, messages); err != nil {
+					fmt.Println("Error sending message to Discord:", err)
+				}
 			}
 		}
 
