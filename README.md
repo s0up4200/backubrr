@@ -60,6 +60,8 @@ In addition to the `interval` key, backubrr also provides a `retention_days` key
 
 To enable GPG encryption, call the program with `--passphrase YOUR_PASSPHRASE` or add an `encryption_key` to the configuration file. backubrr will use this key to encrypt the backup archive using GPG. If no encryption key is set in the configuration file or no `--passphrase` flag is provided, backubrr will create backups without encryption.
 
+Note that encryption requires GPG to be installed on the system.
+
 ### Discord notifications
 
 To enable Discord notifications, add a `discord` key to the configuration file and set its value to the URL of the Discord webhook that you want to use. backubrr will send a notification to the specified channel via the webhook when a backup is created. The notification includes the name of the backup archive and the source directory that was backed up.
