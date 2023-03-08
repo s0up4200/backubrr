@@ -31,8 +31,6 @@ version            show version information                           Displays v
 
 By default, backubrr looks for a configuration file named config.yaml in the same directory as the backubrr executable. Alternatively, you can specify a custom configuration file using the --config flag. The configuration file should contain the following keys:
 
-In addition to the --config flag, you can specify the --passphrase flag to provide a passphrase for encryption. If no encryption key is set in the config file and no --passphrase flag is provided, backubrr will create backups without encryption.
-
 ```yaml
 output_dir: /path/to/backup/directory
 source_dirs:
@@ -43,6 +41,8 @@ source_dirs:
 #discord: https://discord.com/api/webhooks/XXXXXXXXX/XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 #encryption_key: YOUR_ENCRYPTION_KEY
 ```
+
+In addition to the --config flag, you can specify the --passphrase flag to provide a passphrase for encryption. If no encryption key is set in the config file or no --passphrase flag is provided, backubrr will create backups without encryption.
 
 The output_dir key specifies the destination directory where the backup archives will be stored. The source_dirs key is a list of source directories that will be backed up. You can add as many source directories as you need to this list.
 
