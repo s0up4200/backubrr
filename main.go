@@ -81,10 +81,15 @@ func main() {
 				continue
 			}
 
-			// Replace home directory path with ~ in backup message
 			archiveName := fmt.Sprintf("%s_%s.tar.gz", filepath.Base(sourceDir), time.Now().Format("2006-01-02_15-04-05"))
 			backupDir := filepath.Join(config.OutputDir, filepath.Base(sourceDir))
-			backupMessage := fmt.Sprintf("Backup of **`%s`** created successfully! Archive saved to **`%s`**\n", sourceDir, filepath.Join(backupDir, archiveName))
+			var backupMessage string
+			if config.EncryptionKey != "" {
+				encryptedArchiveName := archiveName + ".enc"
+				backupMessage = fmt.Sprintf("Backup of **`%s`** created successfully! Encrypted archive saved to **`%s`**\n", sourceDir, filepath.Join(backupDir, encryptedArchiveName))
+			} else {
+				backupMessage = fmt.Sprintf("Backup of **`%s`** created successfully! Archive saved to **`%s`**\n", sourceDir, filepath.Join(backupDir, archiveName))
+			}
 			backupMessage = strings.Replace(backupMessage, os.Getenv("HOME"), "~", -1)
 			backupMessages = append(backupMessages, backupMessage)
 		}
