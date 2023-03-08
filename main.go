@@ -73,19 +73,13 @@ func main() {
 			}
 
 			// Replace home directory path with ~ in backup message
-			backupMessage := "Backup of " + filepath.Base(sourceDir) + " created successfully! Archive saved to " + filepath.Join(config.OutputDir, filepath.Base(sourceDir)+"_"+time.Now().Format("2006-01-02_15-04-05")+".tar.gz") + "\n"
+			backupMessage := "Backup of `" + filepath.Base(sourceDir) + "` created successfully! Archive saved to `" + filepath.Join(config.OutputDir, filepath.Base(sourceDir)+"_"+time.Now().Format("2006-01-02_15-04-05")+".tar.gz") + "`\n"
 			backupMessage = strings.Replace(backupMessage, os.Getenv("HOME"), "~", -1)
 			backupMessages = append(backupMessages, backupMessage)
 		}
 
-		// fmt.Printf("Checking if there are older backups set for deletion...\n")
-
-		// Send backup messages to Discord
-		if config.DiscordWebhookURL != "" {
-			if err := notifications.SendToDiscordWebhook(config.DiscordWebhookURL, backupMessages); err != nil {
-				fmt.Println("Error sending message to Discord:", err)
-			}
-		}
+		// Combine backup messages into a single message
+		backupMessage := strings.Join(backupMessages, "")
 
 		// Calculate next backup time
 		var nextBackupTime time.Time
@@ -94,10 +88,18 @@ func main() {
 			nextBackupTime = time.Now().Add(duration)
 		}
 
-		// Send next backup message to Discord
-		if config.DiscordWebhookURL != "" && !nextBackupTime.IsZero() {
-			nextBackupMessage := "Next backup will run at **`" + nextBackupTime.Format("2006-01-02 15:04:05") + "`**"
-			if err := notifications.SendToDiscordWebhook(config.DiscordWebhookURL, []string{nextBackupMessage}); err != nil {
+		// Create next backup message
+		var nextBackupMessage string
+		if !nextBackupTime.IsZero() {
+			nextBackupMessage = "\nNext backup will run at **`" + nextBackupTime.Format("2006-01-02 15:04:05") + "`**\n"
+		}
+
+		// Combine backup message and next scheduled backup message
+		combinedMessage := backupMessage + nextBackupMessage
+
+		// Send combined message to Discord
+		if config.DiscordWebhookURL != "" {
+			if err := notifications.SendToDiscordWebhook(config.DiscordWebhookURL, []string{combinedMessage}); err != nil {
 				fmt.Println("Error sending message to Discord:", err)
 			}
 		}
@@ -118,6 +120,5 @@ func main() {
 		} else {
 			break
 		}
-
 	}
 }
