@@ -116,6 +116,11 @@ func CreateBackup(config *config.Config, sourceDir string, passphrase string) er
 			return err
 		}
 
+		// Remove unencrypted backup file
+		if err := os.Remove(filepath.Join(outputDir, archiveName)); err != nil {
+			fmt.Println("Error removing unencrypted backup file:", err)
+		}
+
 		// Print success message for encrypted backup
 		message := fmt.Sprintf("Backup created successfully! Encrypted archive saved to %s\n\n", filepath.Join(config.OutputDir, sourceDirBase, encryptedArchiveName))
 		color.Green(message)
@@ -123,7 +128,6 @@ func CreateBackup(config *config.Config, sourceDir string, passphrase string) er
 		// Print success message for unencrypted backup
 		message := fmt.Sprintf("Backup created successfully! Archive saved to %s\n\n", filepath.Join(config.OutputDir, sourceDirBase, archiveName))
 		color.Green(message)
-
 	}
 
 	return nil
