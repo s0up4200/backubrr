@@ -2,10 +2,12 @@ package backup
 
 import (
 	"archive/tar"
+	"bytes"
 	"compress/gzip"
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"time"
 
@@ -15,7 +17,16 @@ import (
 	"github.com/fatih/color"
 )
 
-func CreateBackup(config *config.Config, sourceDir string) error {
+func CreateBackup(config *config.Config, sourceDir string, passphrase string) error {
+	var encryptionKey string
+	if passphrase == "" {
+		encryptionKey = config.EncryptionKey
+	} else {
+		encryptionKey = passphrase
+	}
+
+	//fmt.Println("Encryption key:", encryptionKey)
+
 	// Print source directory being backed up
 	color.Blue("Backing up %s...\n", sourceDir)
 
@@ -81,9 +92,28 @@ func CreateBackup(config *config.Config, sourceDir string) error {
 	gzipWriter.Close()
 	destFile.Close()
 
-	// Print success message
-	message := fmt.Sprintf("Backup created successfully! Archive saved to %s\n\n", filepath.Join(config.OutputDir, archiveName))
-	color.Green(message)
+	// Encrypt archive using GPG, if encryption key is set
+	if encryptionKey != "" {
+		encryptedArchiveName := fmt.Sprintf("%s.gpg", archiveName)
+		cmd := exec.Command("gpg", "--batch", "--symmetric", "--cipher-algo", "AES256", "--passphrase", encryptionKey, "--output", filepath.Join(config.OutputDir, encryptedArchiveName), filepath.Join(config.OutputDir, archiveName))
+
+		var stderr bytes.Buffer
+		cmd.Stderr = &stderr
+		if err := cmd.Run(); err != nil {
+			fmt.Println("Error running GPG command:", err)
+			fmt.Println("GPG output:", stderr.String())
+			return err
+		}
+
+		// Remove unencrypted archive file
+		if err := os.Remove(filepath.Join(config.OutputDir, archiveName)); err != nil {
+			return err
+		}
+
+		// Print success message
+		message := fmt.Sprintf("Backup created successfully! Archive saved to %s\n\n", filepath.Join(config.OutputDir, encryptedArchiveName))
+		color.Green(message)
+	}
 
 	return nil
 }

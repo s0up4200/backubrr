@@ -43,7 +43,9 @@ func main() {
 	flag.Usage = config.PrintHelp
 	var configFilePath string
 	var backupMessages []string
+	var passphrase string
 	flag.StringVar(&configFilePath, "config", "config.yaml", "path to config file")
+	flag.StringVar(&passphrase, "passphrase", "", "encryption key passphrase")
 	flag.Parse()
 
 	if len(os.Args) == 2 && (os.Args[1] == "version" || os.Args[1] == "-v" || os.Args[1] == "--version") {
@@ -57,6 +59,13 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// Check if encryption key is set in config
+	if config.EncryptionKey != "" && passphrase != "" {
+		errorMessage := "Encryption key is already set in config. Please remove the --passphrase argument or unset the encryption key in the config file."
+		color.HiRed(errorMessage)
+		os.Exit(1)
+	}
+
 	// Create destination directory if it doesn't exist
 	err = os.MkdirAll(config.OutputDir, 0755)
 	if err != nil {
@@ -66,7 +75,7 @@ func main() {
 	for {
 		// Create backup for each source directory
 		for _, sourceDir := range config.SourceDirs {
-			err := backup.CreateBackup(config, sourceDir)
+			err := backup.CreateBackup(config, sourceDir, passphrase)
 			if err != nil {
 				log.Printf("Error creating backup of %s: %s\n", sourceDir, err)
 				continue
