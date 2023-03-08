@@ -31,10 +31,21 @@ func CreateBackup(config *config.Config, sourceDir string, passphrase string) er
 	color.Blue("Backing up %s...\n", sourceDir)
 
 	// Define archive name
-	archiveName := fmt.Sprintf("%s_%s.tar.gz", filepath.Base(sourceDir), time.Now().Format("2006-01-02_15-04-05"))
+	sourceDirBase := filepath.Base(sourceDir)
+	archiveName := fmt.Sprintf("%s_%s.tar.gz", sourceDirBase, time.Now().Format("2006-01-02_15-04-05"))
+
+	// Update the output directory to include the source directory name
+	outputDir := filepath.Join(config.OutputDir, sourceDirBase)
+
+	// Create the output directory if it does not exist
+	if _, err := os.Stat(outputDir); os.IsNotExist(err) {
+		if err := os.MkdirAll(outputDir, os.ModePerm); err != nil {
+			return err
+		}
+	}
 
 	// Create destination file for writing
-	destFile, err := os.Create(filepath.Join(config.OutputDir, archiveName))
+	destFile, err := os.Create(filepath.Join(outputDir, archiveName))
 	if err != nil {
 		return err
 	}
@@ -95,7 +106,7 @@ func CreateBackup(config *config.Config, sourceDir string, passphrase string) er
 	// Encrypt archive using GPG, if encryption key is set
 	if encryptionKey != "" {
 		encryptedArchiveName := fmt.Sprintf("%s.gpg", archiveName)
-		cmd := exec.Command("gpg", "--batch", "--symmetric", "--cipher-algo", "AES256", "--passphrase", encryptionKey, "--output", filepath.Join(config.OutputDir, encryptedArchiveName), filepath.Join(config.OutputDir, archiveName))
+		cmd := exec.Command("gpg", "--batch", "--symmetric", "--cipher-algo", "AES256", "--passphrase", encryptionKey, "--output", filepath.Join(outputDir, encryptedArchiveName), filepath.Join(outputDir, archiveName))
 
 		var stderr bytes.Buffer
 		cmd.Stderr = &stderr
@@ -105,18 +116,14 @@ func CreateBackup(config *config.Config, sourceDir string, passphrase string) er
 			return err
 		}
 
-		// Remove unencrypted archive file
-		if err := os.Remove(filepath.Join(config.OutputDir, archiveName)); err != nil {
-			return err
-		}
-
 		// Print success message for encrypted backup
-		message := fmt.Sprintf("Backup created successfully! Encrypted archive saved to %s\n\n", filepath.Join(config.OutputDir, encryptedArchiveName))
+		message := fmt.Sprintf("Backup created successfully! Encrypted archive saved to %s\n\n", filepath.Join(config.OutputDir, sourceDirBase, encryptedArchiveName))
 		color.Green(message)
 	} else {
 		// Print success message for unencrypted backup
-		message := fmt.Sprintf("Backup created successfully! Archive saved to %s\n\n", filepath.Join(config.OutputDir, archiveName))
+		message := fmt.Sprintf("Backup created successfully! Archive saved to %s\n\n", filepath.Join(config.OutputDir, sourceDirBase, archiveName))
 		color.Green(message)
+
 	}
 
 	return nil
