@@ -18,7 +18,7 @@ Alternatively, you can download the latest binary from the [releases page](https
 
 ## Usage
 
-```bash
+```
 backubrr [flags]
 
 Flags:
