@@ -110,8 +110,12 @@ func CreateBackup(config *config.Config, sourceDir string, passphrase string) er
 			return err
 		}
 
-		// Print success message
-		message := fmt.Sprintf("Backup created successfully! Archive saved to %s\n\n", filepath.Join(config.OutputDir, encryptedArchiveName))
+		// Print success message for encrypted backup
+		message := fmt.Sprintf("Backup created successfully! Encrypted archive saved to %s\n\n", filepath.Join(config.OutputDir, encryptedArchiveName))
+		color.Green(message)
+	} else {
+		// Print success message for unencrypted backup
+		message := fmt.Sprintf("Backup created successfully! Archive saved to %s\n\n", filepath.Join(config.OutputDir, archiveName))
 		color.Green(message)
 	}
 
